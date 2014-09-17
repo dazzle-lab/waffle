@@ -35,7 +35,7 @@ class FileSystem(adapter: Adapter) {
    * @param content the content
    */
   def write(key: String, content: Path): Try[Unit] = Try {
-    write(key, new File(content.toString)).get
+    write(key, content.toFile).get
   }
 
   /**
@@ -48,7 +48,7 @@ class FileSystem(adapter: Adapter) {
     val temp = Files.createTempFile(null, null)
     Files.write(temp, content.getBytes(StandardCharsets.UTF_8))
 
-    write(key, new File(temp.toString)).get
+    write(key, temp.toFile).get
   }
 
   /**
