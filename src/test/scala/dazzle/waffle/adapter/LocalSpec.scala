@@ -1,7 +1,7 @@
 package dazzle.waffle.adapter
 
 import java.io.{File, FileNotFoundException, InputStream}
-import java.nio.file.Files
+import java.nio.file.{NoSuchFileException, Files}
 
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
@@ -28,31 +28,52 @@ class LocalSpec extends Specification with Mockito {
   }
 
   "Local#write" should {
-    "return successful try unit if content exists" in {
+    "return successful try long" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
       val adapter = new Local(root.toString)
 
-      adapter.write("foo/bar", temp.toFile) must beSuccessfulTry[Unit]
+      adapter.write("foo/bar", temp) must beSuccessfulTry[Long]
       adapter.read("foo/bar") must beSuccessfulTry[InputStream]
     }
 
-    "return failed try exception if content does not exists" in {
+    "return faild try exception if path does not exists" in {
       val root = Files.createTempDirectory(null)
       val adapter = new Local(root.toString)
+      val file = new File("")
 
-      adapter.write("foo/bar", new File("")) must beFailedTry[Unit].withThrowable[FileNotFoundException]
+      adapter.write("foo/bar", file.toPath) must beFailedTry[Long].withThrowable[FileNotFoundException]
     }
   }
 
-  "Local#rename" should {
+  "Local#delete" should {
     "return successful try unit if source file exists" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
       val adapter = new Local(root.toString)
 
-      adapter.write("foo/bar", temp.toFile)
-      adapter.rename("foo/bar", "foo/buzz") must beSuccessfulTry[Unit]
+      adapter.write("foo/bar", temp)
+      adapter.delete("foo/bar") must beSuccessfulTry[Unit]
+      adapter.read("foo/bar") must beFailedTry[InputStream].withThrowable[FileNotFoundException]
+    }
+
+    "return failed try exception if source file does not exists" in {
+      val root = Files.createTempDirectory(null)
+      val temp = Files.createTempFile(null, null)
+      val adapter = new Local(root.toString)
+
+      adapter.delete("foo/bar") must beFailedTry[Unit].withThrowable[NoSuchFileException]
+    }
+  }
+
+  "Local#move" should {
+    "return successful try unit if source file exists" in {
+      val root = Files.createTempDirectory(null)
+      val temp = Files.createTempFile(null, null)
+      val adapter = new Local(root.toString)
+
+      adapter.write("foo/bar", temp)
+      adapter.move("foo/bar", "foo/buzz") must beSuccessfulTry[Unit]
       adapter.read("foo/buzz") must beSuccessfulTry[InputStream]
       adapter.read("foo/bar") must beFailedTry[InputStream].withThrowable[FileNotFoundException]
     }
@@ -61,7 +82,25 @@ class LocalSpec extends Specification with Mockito {
       val root = Files.createTempDirectory(null)
       val adapter = new Local(root.toString)
 
-      adapter.rename("foo/bar", "foo/buzz") must beFailedTry[Unit].withThrowable[FileNotFoundException]
+      adapter.move("foo/bar", "foo/buzz") must beFailedTry[Unit].withThrowable[NoSuchFileException]
+    }
+  }
+
+  "Local#mtime" should {
+    "return successful try long" in {
+      val root = Files.createTempDirectory(null)
+      val temp = Files.createTempFile(null, null)
+      val adapter = new Local(root.toString)
+
+      adapter.write("foo/bar", temp)
+      adapter.mtime("foo/bar") must beSuccessfulTry[Long]
+    }
+
+    "return failed try exception if source file does not exists" in {
+      val root = Files.createTempDirectory(null)
+      val adapter = new Local(root.toString)
+
+      adapter.mtime("foo/bar") must beFailedTry[Long]
     }
   }
 }

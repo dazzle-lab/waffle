@@ -1,9 +1,8 @@
 package dazzle.waffle
 
 import dazzle.waffle.adapter.Adapter
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
-import java.io.{File, InputStream}
+import java.nio.file.Path
+import java.io.{File, ByteArrayInputStream, InputStream}
 import scala.util.Try
 
 /**
@@ -25,8 +24,9 @@ class FileSystem(adapter: Adapter) {
    *
    * @param key file path
    * @param content the content
+   * @param length length of the content
    */
-  def write(key: String, content: File): Try[Unit] = adapter.write(key, content)
+  def write(key: String, content: InputStream, length: Long): Try[Long] = adapter.write(key, content, length)
 
   /**
    * Writes the given path(nio2) into the file
@@ -34,9 +34,15 @@ class FileSystem(adapter: Adapter) {
    * @param key file path
    * @param content the content
    */
-  def write(key: String, content: Path): Try[Unit] = Try {
-    write(key, content.toFile).get
-  }
+  def write(key: String, content: Path): Try[Long] = adapter.write(key, content)
+
+  /**
+   * Writes the given file(io) into the file
+   *
+   * @param key file path
+   * @param content the content
+   */
+  def write(key: String, content: File): Try[Long] = adapter.write(key, content.toPath)
 
   /**
    * Writes the given string into the file
@@ -44,11 +50,8 @@ class FileSystem(adapter: Adapter) {
    * @param key file path
    * @param content the content
    */
-  def write(key: String, content: String): Try[Unit] = Try {
-    val temp = Files.createTempFile(null, null)
-    Files.write(temp, content.getBytes(StandardCharsets.UTF_8))
-
-    write(key, temp.toFile).get
+  def write(key: String, content: String): Try[Long] = {
+    adapter.write(key, new ByteArrayInputStream(content.getBytes("utf-8")), content.length)
   }
 
   /**
@@ -64,7 +67,23 @@ class FileSystem(adapter: Adapter) {
    * @param sourceKey source file path
    * @param targetKey target file path
    */
-  def rename(sourceKey: String, targetKey: String): Try[Unit] = adapter.rename(sourceKey, targetKey)
+  def rename(sourceKey: String, targetKey: String): Try[Unit] = adapter.move(sourceKey, targetKey)
+
+  /**
+   * Moves the file
+   *
+   * @param sourceKey source file path
+   * @param targetKey target file path
+   */
+  def move(sourceKey: String, targetKey: String): Try[Unit] = adapter.move(sourceKey, targetKey)
+
+  /**
+   * Gets last modified time
+   *
+   * @param key file path
+   * @return last modified time
+   */
+  def mtime(key: String): Try[Long] = adapter.mtime(key)
 
   /**
    * Indicates whether the file exists
@@ -72,5 +91,5 @@ class FileSystem(adapter: Adapter) {
    * @param key file path
    * @return boolean
    */
-  def exists(key: String): Try[Boolean] = adapter.exists(key)
+  def exists(key: String): Boolean = adapter.exists(key)
 }
