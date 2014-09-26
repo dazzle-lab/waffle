@@ -20,7 +20,7 @@ import scala.util.Try
  *
  * val credentials = new BasicAWSCredentials("access_key_id", "secret_access_key_id")
  * val s3client    = new AmazonS3Client(credentials)
- * val s3adapter   = new AmazonS3(s3client, "bucket_name")
+ * val s3adapter   = new AmazonS3Adapter(s3client, "bucket_name")
  * val filesystem  = new FileSystem(s3adapter)
  *
  * filesystem.read("path/to/file") match {
@@ -32,7 +32,7 @@ import scala.util.Try
  * @param client amazon s3 client
  * @param bucket bucket name
  */
-class AmazonS3(client: AmazonS3Client, bucket: String) extends Adapter {
+class AmazonS3Adapter(client: AmazonS3Client, bucket: String) extends Adapter {
   require(client.listBuckets().exists(_.getName == bucket))
 
   override def read(key: String): Try[InputStream] = Try {

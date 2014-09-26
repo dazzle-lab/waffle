@@ -15,7 +15,7 @@ import org.specs2.specification.Scope
 import scala.util.Try
 
 @RunWith(classOf[JUnitRunner])
-class AmazonS3Spec extends Specification with Mockito {
+class AmazonS3AdapterSpec extends Specification with Mockito {
   trait WithAmazonS3ClientMock extends Scope {
     val bucketName = "bucketname"
     val key        = "path/to/file"
@@ -32,7 +32,7 @@ class AmazonS3Spec extends Specification with Mockito {
       objectMock.getObjectContent returns objectInputStreamMock
       clientMock.getObject(bucketName, key) returns objectMock
 
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.read(key) must beSuccessfulTry[InputStream].withValue(objectInputStreamMock)
       there was one(clientMock).getObject(bucketName, key)
@@ -42,7 +42,7 @@ class AmazonS3Spec extends Specification with Mockito {
     "return failed try exception if file does not exists" in new WithAmazonS3ClientMock {
       clientMock.getObject(bucketName, "path/to/file") throws mock[AmazonClientException]
 
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.read(key) must beFailedTry[InputStream].withThrowable[FileNotFoundException]
       there was one(clientMock).getObject(bucketName, key)
@@ -54,14 +54,14 @@ class AmazonS3Spec extends Specification with Mockito {
       clientMock.putObject(any[PutObjectRequest]) returns mock[PutObjectResult]
 
       val temp = Files.createTempFile(null, null)
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.write(key, temp) must beSuccessfulTry[Long]
       there was one(clientMock).putObject(any[PutObjectRequest])
     }
 
     "return failed try exception if content does not exists" in new WithAmazonS3ClientMock {
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.write(key, Paths.get("")) must beFailedTry[Long].withThrowable[FileNotFoundException]
     }
@@ -69,7 +69,7 @@ class AmazonS3Spec extends Specification with Mockito {
 
   "AmazonS3#delete" should {
     "return successful try unit" in new WithAmazonS3ClientMock {
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
       adapter.delete("path/to/file") must beSuccessfulTry[Unit]
 
       there was one(clientMock).deleteObject(bucketName, key)
@@ -81,7 +81,7 @@ class AmazonS3Spec extends Specification with Mockito {
       val sourceKey = "path/to/file1"
       val targetKey = "path/to/file2"
 
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.move(sourceKey, targetKey) must beSuccessfulTry[Unit]
       there was one(clientMock).copyObject(bucketName, sourceKey, bucketName, targetKey)
@@ -95,7 +95,7 @@ class AmazonS3Spec extends Specification with Mockito {
       metadataMock.getContentLength returns 100L
       clientMock.getObjectMetadata(bucketName, key) returns metadataMock
 
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.mtime(key) must beSuccessfulTry.withValue(100L)
       there was one(metadataMock).getContentLength
@@ -107,7 +107,7 @@ class AmazonS3Spec extends Specification with Mockito {
     "return true if metadata exists" in new WithAmazonS3ClientMock {
       clientMock.getObjectMetadata(bucketName, key) returns mock[ObjectMetadata]
 
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.exists(key) must beTrue
       there was one(clientMock).getObjectMetadata(bucketName, key)
@@ -116,7 +116,7 @@ class AmazonS3Spec extends Specification with Mockito {
     "returns false if metadata does not exists" in new WithAmazonS3ClientMock {
       clientMock.getObjectMetadata(bucketName, key) throws mock[AmazonClientException]
 
-      val adapter = new AmazonS3(clientMock, bucketName)
+      val adapter = new AmazonS3Adapter(clientMock, bucketName)
 
       adapter.exists(key) must beFalse
       there was one(clientMock).getObjectMetadata(bucketName, key)

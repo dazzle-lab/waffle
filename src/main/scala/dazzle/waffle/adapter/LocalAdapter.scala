@@ -9,7 +9,7 @@ import scala.util.Try
  *
  * @param directory root directory path
  */
-class Local(directory: String) extends Adapter {
+class LocalAdapter(directory: String) extends Adapter {
   require(Files.isDirectory(Paths.get(directory)))
 
   override def read(key: String): Try[InputStream] = Try {

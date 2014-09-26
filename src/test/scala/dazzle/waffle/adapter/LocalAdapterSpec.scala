@@ -9,19 +9,19 @@ import org.specs2.mock.Mockito
 import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class LocalSpec extends Specification with Mockito {
+class LocalAdapterSpec extends Specification with Mockito {
   "Local#read" should {
     "return successful try input stream if file exists" in {
       val temp = Files.createTempFile(null, null)
       val root = temp.getParent
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.read(temp.getFileName.toString) must beSuccessfulTry[InputStream]
     }
 
     "return failed try exception if file does not exists" in {
       val root = Files.createTempDirectory(null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.read("foo/bar") must beFailedTry[InputStream].withThrowable[FileNotFoundException]
     }
@@ -31,7 +31,7 @@ class LocalSpec extends Specification with Mockito {
     "return successful try long" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.write("foo/bar", temp) must beSuccessfulTry[Long]
       adapter.read("foo/bar") must beSuccessfulTry[InputStream]
@@ -39,7 +39,7 @@ class LocalSpec extends Specification with Mockito {
 
     "return faild try exception if path does not exists" in {
       val root = Files.createTempDirectory(null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
       val file = new File("")
 
       adapter.write("foo/bar", file.toPath) must beFailedTry[Long].withThrowable[FileNotFoundException]
@@ -50,7 +50,7 @@ class LocalSpec extends Specification with Mockito {
     "return successful try unit if source file exists" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.write("foo/bar", temp)
       adapter.delete("foo/bar") must beSuccessfulTry[Unit]
@@ -60,7 +60,7 @@ class LocalSpec extends Specification with Mockito {
     "return failed try exception if source file does not exists" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.delete("foo/bar") must beFailedTry[Unit].withThrowable[NoSuchFileException]
     }
@@ -70,7 +70,7 @@ class LocalSpec extends Specification with Mockito {
     "return successful try unit if source file exists" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.write("foo/bar", temp)
       adapter.move("foo/bar", "foo/buzz") must beSuccessfulTry[Unit]
@@ -80,7 +80,7 @@ class LocalSpec extends Specification with Mockito {
 
     "return failed try exception if source file does not exists" in {
       val root = Files.createTempDirectory(null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.move("foo/bar", "foo/buzz") must beFailedTry[Unit].withThrowable[NoSuchFileException]
     }
@@ -90,7 +90,7 @@ class LocalSpec extends Specification with Mockito {
     "return successful try long" in {
       val root = Files.createTempDirectory(null)
       val temp = Files.createTempFile(null, null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.write("foo/bar", temp)
       adapter.mtime("foo/bar") must beSuccessfulTry[Long]
@@ -98,7 +98,7 @@ class LocalSpec extends Specification with Mockito {
 
     "return failed try exception if source file does not exists" in {
       val root = Files.createTempDirectory(null)
-      val adapter = new Local(root.toString)
+      val adapter = new LocalAdapter(root.toString)
 
       adapter.mtime("foo/bar") must beFailedTry[Long]
     }
